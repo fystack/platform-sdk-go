@@ -1,0 +1,5 @@
+.env
+dist
+node_modules
+coverage.out
+platform-sdk-go.test
