@@ -1,5 +1,10 @@
 package fystack
 
+import (
+	"encoding/json"
+	"errors"
+)
+
 // SweepTaskParams configures a sweep task attached during wallet creation.
 type SweepTaskParams struct {
 	MinTriggerValueUSD  float64         `json:"min_trigger_value_usd"`
@@ -106,4 +111,27 @@ type Wallet struct {
 	ValueUSD      string     `json:"value_usd"`
 	TopAssets     []TopAsset `json:"top_assets"`
 	WalletPurpose string     `json:"wallet_purpose"`
+}
+
+// UnmarshalJSON supports the public Apex deposit_address response and the
+// address alias used by earlier clients. Conflicting values are rejected.
+func (r *DepositAddressResponse) UnmarshalJSON(data []byte) error {
+	var wire struct {
+		AssetID        string `json:"asset_id"`
+		Address        string `json:"address"`
+		DepositAddress string `json:"deposit_address"`
+		QRCode         string `json:"qr_code"`
+	}
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
+	}
+	if wire.Address != "" && wire.DepositAddress != "" && wire.Address != wire.DepositAddress {
+		return errors.New("conflicting deposit address fields")
+	}
+	address := wire.DepositAddress
+	if address == "" {
+		address = wire.Address
+	}
+	*r = DepositAddressResponse{AssetID: wire.AssetID, Address: address, QRCode: wire.QRCode}
+	return nil
 }

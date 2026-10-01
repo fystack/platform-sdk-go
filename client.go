@@ -235,7 +235,7 @@ func (c *Client) authenticate(ctx context.Context, request *http.Request, body [
 func requestHeaders(options RequestOptions) http.Header {
 	headers := make(http.Header)
 	if options.IdempotencyKey != "" {
-		headers.Set("Idempotency-Key", options.IdempotencyKey)
+		headers.Set("X-Idempotency-Key", options.IdempotencyKey)
 	}
 	return headers
 }

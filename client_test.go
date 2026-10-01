@@ -156,8 +156,8 @@ func TestRequestWithdrawalWireFormat(t *testing.T) {
 		if body["recipient_address"] != "TAddress" || body["skip_balance_check"] != false || body["fee_priority"] != "fast" {
 			t.Errorf("unexpected body: %#v", body)
 		}
-		if request.Header.Get("Idempotency-Key") != "withdrawal-1" {
-			t.Errorf("idempotency key = %q", request.Header.Get("Idempotency-Key"))
+		if request.Header.Get("X-Idempotency-Key") != "withdrawal-1" {
+			t.Errorf("idempotency key = %q", request.Header.Get("X-Idempotency-Key"))
 		}
 		_, _ = io.WriteString(response, `{"success":true,"data":{"auto_approved":false,"withdrawal":{"id":"`+testWithdrawalID+`"}}}`)
 	}))
