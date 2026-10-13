@@ -152,11 +152,14 @@ withdrawal, err := client.RequestWithdrawalWithOptions(
 		RecipientAddress: bitcoinAddress.Address,
 		FeePriority:      &priority,
 	},
-	fystack.RequestOptions{IdempotencyKey: "btc-payout-123"},
+	fystack.RequestOptions{IdempotencyKey: "6f1c2a7e-3b9d-4c1a-9e2f-8a4b5c6d7e8f"},
 )
 ```
 
 Use `TRX` with `TRON_MAINNET` or the corresponding asset UUID for TRON.
+
+`RequestOptions.IdempotencyKey` is sent as `X-Idempotency-Key`. Apex requires a
+UUID and replays the first successful response for that key for 24 hours.
 
 ## Sweep automation
 
@@ -211,11 +214,12 @@ if err := signer.SetWallet(walletID); err != nil {
 }
 
 hash, err := signer.SendTransaction(ctx, transaction,
-	fystack.RequestOptions{IdempotencyKey: "payout-2026-08-31"})
+	fystack.RequestOptions{IdempotencyKey: "0d9e8f7a-6b5c-4d3e-8f1a-2b3c4d5e6f70"})
 ```
 
 `evm.Transaction` integer quantities are decimal strings, matching the API and
-avoiding precision loss. `SignMessage`, `SignMessageBytes`, and `SignTypedData`
+avoiding precision loss. Apex builds EIP-1559 transactions only: set
+`MaxFeePerGas` and `MaxPriorityFeePerGas`; legacy gas prices are not supported. `SignMessage`, `SignMessageBytes`, and `SignTypedData`
 wait for the remote signature and return it directly.
 
 ## Solana signing
@@ -266,8 +270,9 @@ valid, err := fystack.VerifyWebhookEd25519(publicKeyHex, event, signatureHex)
 valid, err := fystack.VerifyWebhookHMAC(apiSecret, event, signatureHex)
 ```
 
-Webhook JSON is canonicalized recursively before verification. HMAC comparison
-uses constant-time comparison.
+Webhook JSON is canonicalized with RFC 8785 (JCS), the same encoding Apex signs.
+HMAC comparison uses constant-time comparison. `GetWebhookPublicKey` returns the
+hex-encoded key that `VerifyWebhookEd25519` expects.
 
 ## Development
 

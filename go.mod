@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.57.1
 	github.com/blocto/solana-go-sdk v1.30.0
+	github.com/gowebpki/jcs v1.0.1
 	github.com/mr-tron/base58 v1.3.0
 )
 

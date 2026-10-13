@@ -21,7 +21,7 @@ func baseURL(environment Environment, domain string) (string, error) {
 	case "", EnvironmentProduction:
 		return "https://api.fystack.io" + apiPrefix, nil
 	case EnvironmentSandbox:
-		return "https://api-dev.fystack.io" + apiPrefix, nil
+		return "https://api.enterprise-sandbox.fystack.io" + apiPrefix, nil
 	case EnvironmentLocal:
 		return "http://localhost:8150" + apiPrefix, nil
 	default:

@@ -9,24 +9,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/gowebpki/jcs"
 )
 
-// CanonicalJSON recursively orders object keys and returns compact JSON.
+// CanonicalJSON returns the RFC 8785 (JCS) canonical form of value. Apex signs
+// webhooks over this form, so verification must use the same encoding.
 func CanonicalJSON(value any) ([]byte, error) {
 	input, err := json.Marshal(value)
 	if err != nil {
 		return nil, fmt.Errorf("encode JSON: %w", err)
 	}
-	var normalized any
-	decoder := json.NewDecoder(bytes.NewReader(input))
-	decoder.UseNumber()
-	if err := decoder.Decode(&normalized); err != nil {
-		return nil, fmt.Errorf("decode JSON: %w", err)
-	}
-	if _, ok := normalized.(map[string]any); !ok {
+	if trimmed := bytes.TrimSpace(input); len(trimmed) == 0 || trimmed[0] != '{' {
 		return nil, errors.New("input must be a non-null object")
 	}
-	return json.Marshal(normalized)
+	canonical, err := jcs.Transform(input)
+	if err != nil {
+		return nil, fmt.Errorf("canonicalize JSON: %w", err)
+	}
+	return canonical, nil
 }
 
 // ComputeWebhookHMAC returns the lowercase hex HMAC-SHA256 webhook signature.

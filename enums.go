@@ -91,6 +91,7 @@ type TransactionStatus string
 
 const (
 	TransactionStatusPending         TransactionStatus = "pending"
+	TransactionStatusBroadcasting    TransactionStatus = "broadcasting"
 	TransactionStatusCompleted       TransactionStatus = "completed"
 	TransactionStatusConfirmed       TransactionStatus = "confirmed"
 	TransactionStatusFailed          TransactionStatus = "failed"

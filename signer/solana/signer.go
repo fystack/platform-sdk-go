@@ -1,4 +1,8 @@
 // Package solana provides a Fystack-backed Solana transaction and message signer.
+//
+// Current Apex deployments reject Solana raw transactions on signRaw and do not
+// accept solana_signMessage on the sign endpoint. The package is kept for
+// deployments that enable the legacy contract; use wallet withdrawals otherwise.
 package solana
 
 import (
@@ -140,7 +144,12 @@ func (s *Signer) SignAndSendTransaction(ctx context.Context, transaction string,
 }
 
 // SignAllTransactions signs and incorporates signatures into serialized transactions.
+// An idempotency key is allowed only for a single transaction, because Apex
+// would replay the first response for every later request with the same key.
 func (s *Signer) SignAllTransactions(ctx context.Context, transactions []string, options fystack.RequestOptions) ([]string, error) {
+	if options.IdempotencyKey != "" && len(transactions) > 1 {
+		return nil, errors.New("idempotency key cannot be shared by multiple transactions")
+	}
 	result := make([]string, len(transactions))
 	for index, transaction := range transactions {
 		signature, err := s.SignTransaction(ctx, transaction, options)

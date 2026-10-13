@@ -19,7 +19,8 @@ type WebhookEvent struct {
 	Event      string          `json:"event"`
 }
 
-// WebhookPublicKeyResponse contains a base64-encoded Ed25519 public key.
+// WebhookPublicKeyResponse contains a hex-encoded Ed25519 public key. Pass
+// PublicKey directly to VerifyWebhookEd25519.
 type WebhookPublicKeyResponse struct {
 	PublicKey string `json:"public_key"`
 }

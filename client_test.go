@@ -228,3 +228,32 @@ func newTestClient(t *testing.T, server *httptest.Server, credentials Credential
 	}
 	return client
 }
+
+func TestEnvironmentBaseURLs(t *testing.T) {
+	t.Parallel()
+	for environment, want := range map[Environment]string{
+		EnvironmentProduction: "https://api.fystack.io/api/v1",
+		EnvironmentSandbox:    "https://api.enterprise-sandbox.fystack.io/api/v1",
+		EnvironmentLocal:      "http://localhost:8150/api/v1",
+	} {
+		got, err := baseURL(environment, "")
+		if err != nil || got != want {
+			t.Fatalf("baseURL(%q) = %q, %v; want %q", environment, got, err, want)
+		}
+	}
+}
+
+func TestLengthLimitsCountCharacters(t *testing.T) {
+	t.Parallel()
+	params := RequestWithdrawalParams{AssetID: testWalletID, Amount: "1", RecipientAddress: "0xabc", Notes: strings.Repeat("ữ", 500)}
+	if err := validateWithdrawal(testWalletID, params); err != nil {
+		t.Fatalf("500 characters must be accepted: %v", err)
+	}
+	params.Notes += "ữ"
+	if err := validateWithdrawal(testWalletID, params); err == nil {
+		t.Fatal("501 characters must be rejected")
+	}
+	if err := validateCreateWallet(CreateWalletParams{Name: strings.Repeat("ví", 50), WalletType: WalletTypeHyper}); err != nil {
+		t.Fatalf("100 characters must be accepted: %v", err)
+	}
+}

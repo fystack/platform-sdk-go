@@ -20,19 +20,21 @@ type Provider interface {
 }
 
 // Transaction contains fields accepted by the remote signer. Integer
-// quantities are decimal strings to avoid precision loss.
+// quantities are decimal strings to avoid precision loss. Apex builds EIP-1559
+// transactions only, so MaxFeePerGas and MaxPriorityFeePerGas are required and
+// legacy gas prices are not supported.
 type Transaction struct {
 	MaxFeePerGas         *string `json:"maxFeePerGas"`
 	MaxPriorityFeePerGas *string `json:"maxPriorityFeePerGas"`
-	GasPrice             *string `json:"gasPrice,omitempty"`
 	To                   *string `json:"to"`
 	From                 string  `json:"from"`
 	Nonce                uint64  `json:"nonce"`
 	GasLimit             *string `json:"gasLimit"`
 	Data                 string  `json:"data"`
 	Value                string  `json:"value"`
-	ChainID              int64   `json:"chainId"`
-	AccessList           any     `json:"accessList"`
+	// ChainID is encoded as a quoted decimal string, which Apex requires.
+	ChainID    int64 `json:"chainId,string"`
+	AccessList any   `json:"accessList"`
 }
 
 // Option configures a Signer.
@@ -106,6 +108,12 @@ func (s *Signer) SignTransaction(ctx context.Context, transaction Transaction, o
 	}
 	if transaction.From != "" && !strings.EqualFold(transaction.From, address) {
 		return "", errors.New("transaction from address mismatch")
+	}
+	if transaction.ChainID <= 0 {
+		return "", errors.New("transaction chain ID is required")
+	}
+	if transaction.MaxFeePerGas == nil || transaction.MaxPriorityFeePerGas == nil {
+		return "", errors.New("maxFeePerGas and maxPriorityFeePerGas are required: legacy gas price transactions are not supported")
 	}
 	transaction.From = address
 	response, err := s.client.SignTransaction(ctx, s.walletID, transaction, options)
