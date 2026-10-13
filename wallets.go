@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/fystack/platform-sdk-go/internal/poller"
 )
@@ -115,7 +116,9 @@ func (c *Client) GetDepositAddressByAssetID(ctx context.Context, walletID, asset
 	return result, err
 }
 
-// RescanTransaction requests a network transaction rescan.
+// RescanTransaction requests a network transaction rescan. Apex accepts this
+// only with a system administrator access token (Credentials.AuthToken), not an
+// API key.
 func (c *Client) RescanTransaction(ctx context.Context, params RescanTransactionParams) error {
 	if err := validateUUID(params.NetworkID, "network ID"); err != nil {
 		return err
@@ -170,7 +173,7 @@ func (c *Client) GetWithdrawalStatus(ctx context.Context, walletID, withdrawalID
 }
 
 func validateCreateWallet(params CreateWalletParams) error {
-	if strings.TrimSpace(params.Name) == "" || len(params.Name) > 100 {
+	if strings.TrimSpace(params.Name) == "" || utf8.RuneCountInString(params.Name) > 100 {
 		return errors.New("wallet name is required and must not exceed 100 characters")
 	}
 	if params.WalletType != WalletTypeHyper && params.WalletType != WalletTypeMPC {
@@ -214,10 +217,10 @@ func validateWithdrawal(walletID string, params RequestWithdrawalParams) error {
 	if strings.TrimSpace(params.RecipientAddress) == "" {
 		return errors.New("invalid recipient address provided")
 	}
-	if len(params.RecipientAddress) > 256 {
+	if utf8.RuneCountInString(params.RecipientAddress) > 256 {
 		return errors.New("recipient address exceeds maximum length of 256 characters")
 	}
-	if len(params.Notes) > 500 {
+	if utf8.RuneCountInString(params.Notes) > 500 {
 		return errors.New("notes exceed maximum length of 500 characters")
 	}
 	for _, categoryID := range params.CategoryIDs {

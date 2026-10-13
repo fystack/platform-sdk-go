@@ -32,6 +32,8 @@ type ClientOptions struct {
 
 // RequestOptions configures headers shared by mutating operations.
 type RequestOptions struct {
+	// IdempotencyKey is sent as X-Idempotency-Key. Apex requires a UUID and
+	// replays the first successful response for 24 hours.
 	IdempotencyKey string
 }
 
@@ -161,7 +163,7 @@ func (c *Client) do(ctx context.Context, method, endpoint string, body any, head
 	if len(responseBytes) > maxResponseSize {
 		return errors.New("fystack API response exceeds 10 MiB")
 	}
-	if response.StatusCode == http.StatusNoContent && response.StatusCode >= 200 && response.StatusCode < 300 {
+	if response.StatusCode == http.StatusNoContent {
 		return nil
 	}
 
@@ -215,7 +217,7 @@ func (c *Client) authenticate(ctx context.Context, request *http.Request, body [
 		return errors.New("API key is required for signed requests")
 	}
 	timestamp := strconv.FormatInt(c.now().Unix(), 10)
-	canonical := CanonicalString(request.Method, request.URL.EscapedPath(), timestamp, body)
+	canonical := CanonicalString(request.Method, request.URL.Path, timestamp, body)
 	var signature string
 	var err error
 	if credentials.Signer != nil {
